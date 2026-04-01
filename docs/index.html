@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project MayDay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fafafa;
+            --surface: #ffffff;
+            --surface-2: #f4f4f6;
+            --border: #e2e4ea;
+            --text: #1a1d28;
+            --text-dim: #6b7085;
+            --accent: #5046e5;
+            --accent-light: #ededfc;
+            --teal: #0f7b6c;
+            --teal-light: #ecf8f6;
+            --warm: #b45309;
+            --warm-light: #fef7ec;
+            --slate: #475569;
+            --mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+            --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- Subtle background texture --- */
+        .bg-dots {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background-image: radial-gradient(circle, #d1d5de 0.8px, transparent 0.8px);
+            background-size: 28px 28px;
+            opacity: 0.5;
+            mask-image: radial-gradient(ellipse 70% 50% at 50% 20%, black, transparent);
+            -webkit-mask-image: radial-gradient(ellipse 70% 50% at 50% 20%, black, transparent);
+        }
+
+        /* --- Layout --- */
+        .content {
+            position: relative;
+            z-index: 1;
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        section { padding: 48px 0; }
+
+        /* --- Hero --- */
+        .hero {
+            min-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 80px 0 48px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--teal);
+            background: var(--teal-light);
+            border: 1px solid rgba(15, 123, 108, 0.15);
+            border-radius: 100px;
+            padding: 6px 18px;
+            margin-bottom: 32px;
+        }
+
+        .hero h1 {
+            font-size: clamp(44px, 7vw, 72px);
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            color: var(--text);
+            margin-bottom: 24px;
+        }
+
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, var(--accent), var(--teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: clamp(16px, 2.2vw, 19px);
+            color: var(--text-dim);
+            max-width: 500px;
+            line-height: 1.65;
+            margin-bottom: 40px;
+        }
+
+        .hero-meta {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .hero-meta-item { text-align: center; }
+
+        .hero-meta-item .value {
+            font-size: 20px;
+            font-weight: 800;
+            font-family: var(--mono);
+            color: var(--text);
+        }
+
+        .hero-meta-item .label {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 2px;
+        }
+
+        .scroll-hint {
+            margin-top: 52px;
+            color: var(--text-dim);
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            opacity: 0.6;
+            animation: bob 2.5s ease-in-out infinite;
+        }
+
+        .scroll-hint svg {
+            display: block;
+            margin: 6px auto 0;
+        }
+
+        @keyframes bob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(5px); }
+        }
+
+        /* --- Section headers --- */
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .section-title {
+            font-size: clamp(26px, 3.5vw, 34px);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .section-desc {
+            color: var(--text-dim);
+            font-size: 15px;
+            max-width: 520px;
+            margin-bottom: 36px;
+            line-height: 1.65;
+        }
+
+        /* --- Scenario card --- */
+        .scenario-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 28px 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .scenario-card p {
+            font-size: 15px;
+            color: var(--text-dim);
+            line-height: 1.75;
+            margin-bottom: 14px;
+        }
+
+        .scenario-card p:last-child { margin-bottom: 0; }
+        .scenario-card strong { color: var(--text); }
+
+        .scenario-card .hint {
+            display: inline;
+            background: var(--accent-light);
+            color: var(--accent);
+            border-radius: 4px;
+            padding: 1px 8px;
+            font-size: 13.5px;
+            font-weight: 500;
+        }
+
+        /* --- Phase cards --- */
+        .phases {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        .phase {
+            display: grid;
+            grid-template-columns: 52px 1fr;
+            gap: 18px;
+            align-items: start;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 22px 26px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            transition: box-shadow 0.2s;
+        }
+
+        .phase:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .phase-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .phase:nth-child(1) .phase-icon { background: var(--accent-light); }
+        .phase:nth-child(2) .phase-icon { background: var(--teal-light); }
+        .phase:nth-child(3) .phase-icon { background: var(--warm-light); }
+        .phase:nth-child(4) .phase-icon { background: #f0f4ff; }
+
+        .phase-body { min-width: 0; }
+
+        .phase-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 3px;
+        }
+
+        .phase-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .phase-time {
+            font-size: 12px;
+            font-family: var(--mono);
+            color: var(--text-dim);
+            flex-shrink: 0;
+        }
+
+        .phase p {
+            font-size: 14px;
+            color: var(--text-dim);
+            line-height: 1.6;
+        }
+
+        /* --- What you'll practice --- */
+        .skills-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 40px;
+        }
+
+        .skill-chip {
+            font-size: 13px;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 100px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+        }
+
+        /* --- Prep grid --- */
+        .prep-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .prep-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        .prep-card h3 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .prep-card ul {
+            list-style: none;
+            font-size: 13.5px;
+            color: var(--text-dim);
+        }
+
+        .prep-card li {
+            padding: 3px 0 3px 16px;
+            position: relative;
+        }
+
+        .prep-card li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 11px;
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: var(--border);
+        }
+
+        .tool-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .tool-tag {
+            font-size: 11px;
+            font-family: var(--mono);
+            font-weight: 500;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--slate);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        /* --- Terminal --- */
+        .terminal {
+            background: #1a1d28;
+            border: 1px solid #2e3345;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 32px;
+        }
+
+        .terminal-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            background: #11131b;
+            border-bottom: 1px solid #2e3345;
+        }
+
+        .terminal-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot:nth-child(1) { background: #ef4444; }
+        .terminal-dot:nth-child(2) { background: #f59e0b; }
+        .terminal-dot:nth-child(3) { background: #22c55e; }
+
+        .terminal-title {
+            font-size: 11px;
+            color: #7a7f94;
+            margin-left: 8px;
+            font-family: var(--mono);
+        }
+
+        .terminal-body {
+            padding: 18px 20px;
+            font-family: var(--mono);
+            font-size: 12.5px;
+            line-height: 1.85;
+            color: #7a7f94;
+        }
+
+        .terminal-body .prompt { color: #22c55e; }
+        .terminal-body .cmd { color: #e4e7ef; }
+        .terminal-body .comment { color: #4a5068; }
+        .terminal-body .output { color: #06b6d4; }
+
+        /* --- Footer --- */
+        footer {
+            padding: 36px 0;
+            text-align: center;
+            font-size: 12px;
+            color: #b0b5c5;
+            border-top: 1px solid var(--border);
+        }
+
+        footer strong { color: var(--text-dim); font-weight: 600; }
+
+        /* --- Responsive --- */
+        @media (max-width: 640px) {
+            .hero-meta { gap: 24px; }
+            .prep-grid { grid-template-columns: 1fr; }
+            .phase { grid-template-columns: 1fr; gap: 10px; }
+            .phase-icon { width: 40px; height: 40px; }
+            .content { padding: 0 16px; }
+            .skills-strip { gap: 6px; }
+        }
+
+        /* --- Print (A4 poster) --- */
+        @media print {
+            body { background: white; }
+            @page { size: A4; margin: 12mm; }
+            .bg-dots, .scroll-hint { display: none; }
+            .hero { min-height: auto; padding: 20px 0; }
+            section { padding: 16px 0; }
+            .terminal { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-dots"></div>
+
+    <div class="content">
+
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-badge">Hands-On Workshop</div>
+            <h1>Project <span class="highlight">MayDay</span></h1>
+            <p class="hero-sub">
+                An afternoon of data science, machine learning, and real-time experimentation.
+                Work in small teams to explore data, build a model, and see how it
+                performs on live traffic.
+            </p>
+            <div class="hero-meta">
+                <div class="hero-meta-item">
+                    <div class="value">5 May 2026</div>
+                    <div class="label">1:00 &ndash; 4:30 pm</div>
+                </div>
+                <div class="hero-meta-item">
+                    <div class="value">Dr Thomas Robinson</div>
+                    <div class="label">Instructor</div>
+                </div>
+            </div>
+            <div class="hero-meta" style="margin-top: 24px;">
+                <div class="hero-meta-item">
+                    <div class="value">2&ndash;4</div>
+                    <div class="label">Per Team</div>
+                </div>
+                <div class="hero-meta-item">
+                    <div class="value">SQL + ML + CI</div>
+                    <div class="label">Skills</div>
+                </div>
+            </div>
+            <div class="scroll-hint">
+                Scroll for details
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M4 6l4 4 4-4"/>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Scenario -->
+        <section>
+            <div class="section-label">The Scenario</div>
+            <div class="section-title">An e-commerce ad problem</div>
+            <div class="scenario-card">
+                <p>
+                    You have access to a database of
+                    <strong>500,000 ad impressions</strong> across <strong>10,000 users</strong>
+                    and <strong>200 ad creatives</strong>, complete with click and purchase data.
+                </p>
+                <p>
+                    Your team's goal: build a model that decides <strong>which ads to show
+                    to which users</strong> in order to generate the most value. You'll deploy
+                    it to a live simulation and see how different approaches compare on a
+                    shared dashboard.
+                </p>
+                <p>
+                    The metric is <strong>revenue per impression</strong>.
+                    Sounds straightforward &mdash; but the data has structure worth
+                    exploring first. <span class="hint">The obvious approach may not be the best one.</span>
+                </p>
+            </div>
+        </section>
+
+        <!-- Phases -->
+        <section>
+            <div class="section-label">How It Works</div>
+            <div class="section-title">Four phases, start to finish</div>
+            <p class="section-desc">
+                Each phase builds on the last. You'll go from open-ended data exploration
+                to a model running against live traffic.
+            </p>
+            <div class="phases">
+                <div class="phase">
+                    <div class="phase-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    </div>
+                    <div class="phase-body">
+                        <div class="phase-head">
+                            <span class="phase-name">Explore</span>
+                            <span class="phase-time">~45 min</span>
+                        </div>
+                        <p>
+                            Query the database through a web-based SQL editor or directly from
+                            your notebook. Get to know the users, ads, and funnel &mdash; and look for
+                            patterns that might shape your modelling choices.
+                        </p>
+                    </div>
+                </div>
+                <div class="phase">
+                    <div class="phase-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    </div>
+                    <div class="phase-body">
+                        <div class="phase-head">
+                            <span class="phase-name">Build</span>
+                            <span class="phase-time">~75 min</span>
+                        </div>
+                        <p>
+                            Pull training data, engineer features, and train an ML model.
+                            The most interesting decision isn't which algorithm to use &mdash;
+                            it's deciding what your model should optimise for.
+                        </p>
+                    </div>
+                </div>
+                <div class="phase">
+                    <div class="phase-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    </div>
+                    <div class="phase-body">
+                        <div class="phase-head">
+                            <span class="phase-name">Optimise</span>
+                            <span class="phase-time">~30 min</span>
+                        </div>
+                        <p>
+                            Your model needs to serve predictions in real time. Profile its
+                            latency and think about the tradeoff between complexity and speed &mdash;
+                            a practical constraint you'd face in any production system.
+                        </p>
+                    </div>
+                </div>
+                <div class="phase">
+                    <div class="phase-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M7 16l4-6 4 3 5-7"/></svg>
+                    </div>
+                    <div class="phase-body">
+                        <div class="phase-head">
+                            <span class="phase-name">Test Live</span>
+                            <span class="phase-time">~45 min</span>
+                        </div>
+                        <p>
+                            Upload your model to the shared simulation. A live dashboard shows
+                            how each team's approach performs on the same stream of traffic &mdash;
+                            a good way to compare strategies and discuss what worked.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills -->
+        <section>
+            <div class="section-label">Along the Way</div>
+            <div class="section-title">What you'll practice</div>
+            <div class="skills-strip">
+                <span class="skill-chip">Exploratory analysis with SQL</span>
+                <span class="skill-chip">Feature engineering</span>
+                <span class="skill-chip">ML model training</span>
+                <span class="skill-chip">Choosing the right objective</span>
+                <span class="skill-chip">Latency-aware model design</span>
+                <span class="skill-chip">Full-funnel thinking</span>
+                <span class="skill-chip">Causal inference</span>
+                <span class="skill-chip">Live A/B experimentation</span>
+                <span class="skill-chip">Model deployment</span>
+            </div>
+
+            <div class="section-label">Before You Arrive</div>
+            <div class="section-title">Setup</div>
+            <p class="section-desc">
+                No pre-work needed &mdash; just make sure you have a working Python
+                environment and the libraries below installed.
+            </p>
+
+            <div class="prep-grid">
+                <div class="prep-card">
+                    <h3>Bring</h3>
+                    <ul>
+                        <li>Laptop with Python 3.9+</li>
+                        <li>Jupyter Notebook or JupyterLab</li>
+                        <li>Curiosity</li>
+                    </ul>
+                </div>
+                <div class="prep-card">
+                    <h3><strong>Building on</strong></h3>
+                    <ul>
+                        <li>Python (MY470)</li>
+                        <li>Basic SQL (MY472)</li>
+                        <li>Machine learning (MY474)</li>
+                        <li>Experimentation (MY457)</li>
+                    </ul>
+                </div>
+                <div class="prep-card" style="grid-column: 1 / -1;">
+                    <h3>Install beforehand</h3>
+                    <div class="tool-tags">
+                        <span class="tool-tag">pandas</span>
+                        <span class="tool-tag">numpy</span>
+                        <span class="tool-tag">scikit-learn</span>
+                        <span class="tool-tag">lightgbm</span>
+                        <span class="tool-tag">matplotlib</span>
+                        <span class="tool-tag">requests</span>
+                        <span class="tool-tag">cloudpickle</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="terminal">
+                <div class="terminal-bar">
+                    <div class="terminal-dot"></div>
+                    <div class="terminal-dot"></div>
+                    <div class="terminal-dot"></div>
+                    <span class="terminal-title">setup.sh</span>
+                </div>
+                <div class="terminal-body">
+                    <span class="comment"># Install dependencies</span><br>
+                    <span class="prompt">$</span> <span class="cmd">pip install pandas numpy scikit-learn lightgbm matplotlib requests cloudpickle</span><br>
+                    <br>
+                    <span class="comment"># The server URL will be shared at the start of the session</span><br>
+                    <span class="prompt">$</span> <span class="cmd">export SERVER=http://&lt;provided-on-the-day&gt;:8000</span><br>
+                    <br>
+                    <span class="comment"># Open the student notebook</span><br>
+                    <span class="prompt">$</span> <span class="cmd">jupyter notebook student_workbook.ipynb</span><br>
+                    <span class="output">[I 09:00:00] Notebook is running.</span>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer>
+        <strong>Project MayDay</strong>
+    </footer>
+
+</body>
+</html>
