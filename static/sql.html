@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Explorer | Project MayDay</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav>
+        <a href="/" class="brand">Project MayDay</a>
+        <a href="/sql" class="active">SQL Explorer</a>
+        <a href="/dashboard">Live Dashboard</a>
+    </nav>
+
+    <div class="container-wide">
+        <div class="sql-layout">
+            <!-- Schema sidebar -->
+            <div class="schema-panel" id="schema-panel">
+                <h3 style="margin-bottom: 0.75rem;">Schema</h3>
+                <div id="schema-content">Loading...</div>
+            </div>
+
+            <!-- Query area -->
+            <div>
+                <div class="card">
+                    <div class="flex justify-between items-center mb-1">
+                        <h2 style="margin: 0;">Query</h2>
+                        <div class="flex gap-1">
+                            <button class="btn btn-secondary" onclick="formatQuery()">Format</button>
+                            <button class="btn btn-primary" onclick="runQuery()" id="run-btn">
+                                Run (Ctrl+Enter)
+                            </button>
+                        </div>
+                    </div>
+                    <textarea class="sql-editor" id="sql-input" placeholder="SELECT * FROM users LIMIT 10;"
+                        spellcheck="false">-- Start exploring! Try these queries:
+--
+-- 1. How many impressions, clicks, and conversions are there?
+-- SELECT
+--   COUNT(*) as impressions,
+--   SUM(clicked) as clicks,
+--   ROUND(AVG(clicked) * 100, 2) as ctr_pct
+-- FROM impressions;
+--
+-- 2. Which user segments click the most vs buy the most?
+-- SELECT
+--   u.loyalty_tier,
+--   u.device_type,
+--   COUNT(*) as impressions,
+--   SUM(i.clicked) as clicks,
+--   ROUND(AVG(i.clicked) * 100, 2) as ctr_pct,
+--   COUNT(c.conversion_id) as conversions,
+--   ROUND(SUM(c.revenue), 2) as total_revenue
+-- FROM impressions i
+-- JOIN users u ON i.user_id = u.user_id
+-- LEFT JOIN conversions c ON i.impression_id = c.impression_id
+-- GROUP BY u.loyalty_tier, u.device_type
+-- ORDER BY total_revenue DESC;
+
+SELECT * FROM users LIMIT 10;</textarea>
+                </div>
+
+                <!-- Results -->
+                <div id="results-area">
+                    <div class="query-info" id="query-info" style="display: none;">
+                        <span id="row-count"></span>
+                        <span id="query-time"></span>
+                    </div>
+                    <div id="error-area"></div>
+                    <div class="results-scroll" id="results-scroll" style="display: none;">
+                        <table class="results-table" id="results-table">
+                            <thead id="results-head"></thead>
+                            <tbody id="results-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Quick queries -->
+                <div class="card mt-2">
+                    <h3>Quick Queries</h3>
+                    <div class="flex gap-1" style="flex-wrap: wrap;">
+                        <button class="btn btn-secondary" onclick="setQuery('SELECT * FROM users LIMIT 20;')">Users</button>
+                        <button class="btn btn-secondary" onclick="setQuery('SELECT * FROM ads LIMIT 20;')">Ads</button>
+                        <button class="btn btn-secondary" onclick="setQuery('SELECT * FROM impressions LIMIT 20;')">Impressions</button>
+                        <button class="btn btn-secondary" onclick="setQuery('SELECT * FROM conversions LIMIT 20;')">Conversions</button>
+                        <button class="btn btn-secondary" onclick="setQuery(`SELECT\n  COUNT(*) as impressions,\n  SUM(clicked) as clicks,\n  ROUND(AVG(clicked) * 100, 2) as ctr_pct,\n  (SELECT COUNT(*) FROM conversions) as conversions,\n  (SELECT ROUND(SUM(revenue), 2) FROM conversions) as total_revenue\nFROM impressions;`)">Summary Stats</button>
+                        <button class="btn btn-secondary" onclick="setQuery(`SELECT\n  u.loyalty_tier,\n  COUNT(DISTINCT u.user_id) as users,\n  COUNT(*) as impressions,\n  SUM(i.clicked) as clicks,\n  ROUND(AVG(i.clicked) * 100, 2) as ctr_pct,\n  COUNT(c.conversion_id) as conversions,\n  ROUND(SUM(c.revenue), 2) as total_revenue,\n  ROUND(SUM(c.revenue) / COUNT(*), 4) as revenue_per_impression\nFROM impressions i\nJOIN users u ON i.user_id = u.user_id\nLEFT JOIN conversions c ON i.impression_id = c.impression_id\nGROUP BY u.loyalty_tier\nORDER BY revenue_per_impression DESC;`)">Revenue by Loyalty Tier</button>
+                        <button class="btn btn-secondary" onclick="setQuery(`SELECT\n  a.category,\n  ROUND(AVG(a.headline_clickbait_score), 1) as avg_clickbait,\n  ROUND(AVG(a.creative_quality_score), 1) as avg_quality,\n  COUNT(*) as impressions,\n  SUM(i.clicked) as clicks,\n  ROUND(AVG(i.clicked) * 100, 2) as ctr_pct,\n  COUNT(c.conversion_id) as conversions,\n  ROUND(SUM(c.revenue), 2) as total_revenue\nFROM impressions i\nJOIN ads a ON i.ad_id = a.ad_id\nLEFT JOIN conversions c ON i.impression_id = c.impression_id\nGROUP BY a.category\nORDER BY total_revenue DESC;`)">Revenue by Ad Category</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sqlInput = document.getElementById('sql-input');
+
+        // Ctrl+Enter to run
+        sqlInput.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                runQuery();
+            }
+            // Tab inserts spaces
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = sqlInput.selectionStart;
+                sqlInput.value = sqlInput.value.substring(0, start) + '  ' + sqlInput.value.substring(sqlInput.selectionEnd);
+                sqlInput.selectionStart = sqlInput.selectionEnd = start + 2;
+            }
+        });
+
+        function setQuery(q) {
+            sqlInput.value = q;
+            sqlInput.focus();
+        }
+
+        function formatQuery() {
+            // Basic formatting: uppercase keywords
+            let q = sqlInput.value;
+            const keywords = ['SELECT', 'FROM', 'WHERE', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN',
+                'INNER JOIN', 'ON', 'GROUP BY', 'ORDER BY', 'HAVING', 'LIMIT', 'OFFSET',
+                'UNION', 'INSERT', 'UPDATE', 'DELETE', 'AS', 'AND', 'OR', 'NOT', 'IN',
+                'BETWEEN', 'LIKE', 'IS', 'NULL', 'COUNT', 'SUM', 'AVG', 'MIN', 'MAX',
+                'ROUND', 'DISTINCT', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'DESC', 'ASC'];
+            keywords.forEach(kw => {
+                const re = new RegExp('\\b' + kw.replace(' ', '\\s+') + '\\b', 'gi');
+                q = q.replace(re, kw);
+            });
+            sqlInput.value = q;
+        }
+
+        async function runQuery() {
+            const query = sqlInput.value.trim();
+            if (!query) return;
+
+            const btn = document.getElementById('run-btn');
+            btn.disabled = true;
+            btn.textContent = 'Running...';
+
+            const errorArea = document.getElementById('error-area');
+            const resultsScroll = document.getElementById('results-scroll');
+            const queryInfo = document.getElementById('query-info');
+            errorArea.innerHTML = '';
+            resultsScroll.style.display = 'none';
+            queryInfo.style.display = 'none';
+
+            const startTime = performance.now();
+
+            try {
+                const resp = await fetch('/api/sql', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, limit: 1000 }),
+                });
+
+                const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    errorArea.innerHTML = `<div class="error-msg">${err.detail || 'Unknown error'}</div>`;
+                    return;
+                }
+
+                const data = await resp.json();
+                renderResults(data, elapsed);
+
+            } catch (e) {
+                errorArea.innerHTML = `<div class="error-msg">Network error: ${e.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Run (Ctrl+Enter)';
+            }
+        }
+
+        function renderResults(data, elapsed) {
+            const { columns, rows, count, truncated } = data;
+
+            // Row count & time
+            const queryInfo = document.getElementById('query-info');
+            document.getElementById('row-count').textContent =
+                `${count.toLocaleString()} row${count !== 1 ? 's' : ''}${truncated ? ' (truncated)' : ''}`;
+            document.getElementById('query-time').textContent = `${elapsed}s`;
+            queryInfo.style.display = 'flex';
+
+            // Table header
+            const head = document.getElementById('results-head');
+            head.innerHTML = '<tr>' + columns.map(c => `<th>${escHtml(c)}</th>`).join('') + '</tr>';
+
+            // Table body
+            const body = document.getElementById('results-body');
+            body.innerHTML = rows.map(row =>
+                '<tr>' + columns.map(c => `<td>${formatCell(row[c])}</td>`).join('') + '</tr>'
+            ).join('');
+
+            document.getElementById('results-scroll').style.display = 'block';
+        }
+
+        function formatCell(val) {
+            if (val === null || val === undefined) return '<span style="color: var(--text-dim);">NULL</span>';
+            if (typeof val === 'number') {
+                if (Number.isInteger(val)) return val.toLocaleString();
+                return val.toLocaleString(undefined, { maximumFractionDigits: 4 });
+            }
+            return escHtml(String(val));
+        }
+
+        function escHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        // Load schema
+        async function loadSchema() {
+            try {
+                const resp = await fetch('/api/schema');
+                const data = await resp.json();
+                const container = document.getElementById('schema-content');
+                container.innerHTML = '';
+
+                for (const [name, info] of Object.entries(data.tables)) {
+                    const tableEl = document.createElement('div');
+                    tableEl.innerHTML = `
+                        <span class="schema-table-name" onclick="setQuery('SELECT * FROM ${name} LIMIT 20;')">
+                            ${name} <span class="schema-count">(${info.row_count.toLocaleString()})</span>
+                        </span>
+                        <div class="schema-columns">
+                            ${info.columns.map(c => `<div>${c.name} <span style="color: var(--accent); opacity: 0.6;">${c.type}</span></div>`).join('')}
+                        </div>
+                    `;
+                    container.appendChild(tableEl);
+                }
+            } catch (e) {
+                document.getElementById('schema-content').textContent = 'Failed to load schema';
+            }
+        }
+
+        loadSchema();
+    </script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project MayDay</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav>
+        <a href="/" class="brand">Project MayDay</a>
+        <a href="/slides">Slides</a>
+        <a href="/sql">SQL Explorer</a>
+        <a href="/dashboard">Live Dashboard</a>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>Project <span class="hl">MayDay</span></h1>
+            <p>From SQL to live A/B test in one session. Query real data, build a model, and deploy it.</p>
+        </div>
+
+        <div class="phase-cards">
+            <a href="/hints/explore" class="phase-card">
+                <div class="phase-number">Phase 1</div>
+                <h3>Explore the Data</h3>
+                <p>Query the e-commerce ad database using SQL. Understand users, ads, clicks, and conversions. Look for patterns that might shape your modelling choices.</p>
+                <div class="phase-time">~45 minutes</div>
+            </a>
+
+            <a href="/hints/build" class="phase-card">
+                <div class="phase-number">Phase 2</div>
+                <h3>Build Your Model</h3>
+                <p>Engineer features and train an ML model. The most interesting decision isn't which algorithm to use &mdash; it's what to optimise for.</p>
+                <div class="phase-time">~75 minutes</div>
+            </a>
+
+            <a href="/hints/optimise" class="phase-card">
+                <div class="phase-number">Phase 3</div>
+                <h3>Optimise for Production</h3>
+                <p>Your model must serve predictions in real time. Slow models get penalised. Navigate the accuracy&ndash;latency tradeoff.</p>
+                <div class="phase-time">~30 minutes</div>
+            </a>
+
+            <a href="/hints/deploy" class="phase-card">
+                <div class="phase-number">Phase 4</div>
+                <h3>Deploy &amp; Test Live</h3>
+                <p>Upload your model to the live A/B test. Watch the dashboard as traffic flows through every team's model. Iterate and improve.</p>
+                <div class="phase-time">~45 minutes</div>
+            </a>
+        </div>
+
+        <div class="card mt-3">
+            <h2>Quick Links</h2>
+            <div class="grid-3">
+                <div>
+                    <h3>Tools</h3>
+                    <ul style="list-style: none; font-size: 0.9rem;">
+                        <li><a href="/sql" style="color: var(--accent);">SQL Explorer</a> &mdash; query the database</li>
+                        <li class="mt-1"><a href="/dashboard" style="color: var(--accent);">Live Dashboard</a> &mdash; watch the results</li>
+                        <li class="mt-1"><span class="text-dim">Notebook: <code class="font-mono">student_workbook.ipynb</code></span></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Database Schema</h3>
+                    <ul style="list-style: none; font-size: 0.9rem; font-family: var(--mono);" class="text-dim">
+                        <li>users &mdash; 10,000 users</li>
+                        <li>ads &mdash; 200 ad creatives</li>
+                        <li>impressions &mdash; 500,000 views</li>
+                        <li>conversions &mdash; purchases</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Hints</h3>
+                    <ul style="list-style: none; font-size: 0.9rem;">
+                        <li><a href="/hints/explore" style="color: var(--accent);">Phase 1</a> &mdash; Explore</li>
+                        <li><a href="/hints/build" style="color: var(--accent);">Phase 2</a> &mdash; Build</li>
+                        <li><a href="/hints/optimise" style="color: var(--accent);">Phase 3</a> &mdash; Optimise</li>
+                        <li><a href="/hints/deploy" style="color: var(--accent);">Phase 4</a> &mdash; Deploy</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

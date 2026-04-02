@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 1: Explore | Project MayDay</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/hints/hints.css">
+</head>
+<body>
+    <nav>
+        <a href="/" class="brand">Project MayDay</a>
+        <a href="/sql">SQL Explorer</a>
+        <a href="/dashboard">Live Dashboard</a>
+    </nav>
+
+    <div class="container hints-page">
+
+        <a href="/" class="back-link">&larr; Back</a>
+
+        <div class="hints-header">
+            <div class="phase-badge phase-1">Phase 1</div>
+            <h1>Explore the Data</h1>
+            <p class="hints-sub">~45 minutes &mdash; Get to know the database before you model anything.</p>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">1</div>
+            <div>
+                <h3>Start with the big picture</h3>
+                <p>
+                    Before diving into specific segments, understand the overall funnel.
+                    How many impressions are there? What fraction get clicked? Of those
+                    clicks, what fraction lead to a purchase? What's the total revenue?
+                </p>
+                <div class="hint-nudge">
+                    Tables you'll need: <code>impressions</code>, <code>conversions</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">2</div>
+            <div>
+                <h3>Break it down by user type</h3>
+                <p>
+                    The <code>users</code> table has several columns that describe who someone is:
+                    loyalty tier, device type, age group, browsing frequency. Try grouping
+                    your funnel metrics by these dimensions. Do all groups behave the same way?
+                </p>
+                <div class="hint-nudge">
+                    Compare CTR <em>and</em> revenue per impression side by side. Are the rankings the same?
+                </div>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">3</div>
+            <div>
+                <h3>Look at the ads too</h3>
+                <p>
+                    Ads have metadata about creative quality, headline style, product price,
+                    and discounts. Some ads might attract lots of clicks. Does that mean
+                    they generate lots of revenue? Check.
+                </p>
+                <div class="hint-nudge">
+                    Try grouping by <code>headline_clickbait_score</code> (high vs low) and
+                    <code>creative_quality_score</code> (high vs low). Look at both CTR and revenue.
+                </div>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">4</div>
+            <div>
+                <h3>Think about what "conversion" means here</h3>
+                <p>
+                    A click is free for the advertiser to count. A conversion means someone
+                    actually bought something. How does the conversion rate (given a click)
+                    vary across different user groups? Are the users who click the most also
+                    the ones who buy the most?
+                </p>
+                <div class="hint-nudge">
+                    This is the single most important thing to understand before Phase 2.
+                </div>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">5</div>
+            <div>
+                <h3>Ask yourself</h3>
+                <p>
+                    Before moving on, you should be able to answer these questions with data:
+                </p>
+                <ul class="hint-questions">
+                    <li>If you could only show ads to one user segment, which would generate the most revenue?</li>
+                    <li>Is that the same segment with the highest click-through rate?</li>
+                    <li>Do high-clickbait ads make more money than high-quality ads?</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="hints-nav">
+            <div></div>
+            <a href="/hints/build" class="hints-nav-link">Phase 2: Build &rarr;</a>
+        </div>
+
+    </div>
+</body>
+</html>

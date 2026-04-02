@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project MayDay — Slides</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fafafa;
+            --surface: #ffffff;
+            --surface-2: #f4f4f6;
+            --border: #e2e4ea;
+            --text: #1a1d28;
+            --text-dim: #6b7085;
+            --accent: #5046e5;
+            --accent-light: #ededfc;
+            --teal: #0f7b6c;
+            --teal-light: #ecf8f6;
+            --orange: #b45309;
+            --orange-light: #fef7ec;
+            --blue: #3b82f6;
+            --red: #dc2626;
+            --mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+            --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* --- Slide container --- */
+
+        .deck {
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            padding: 6vh 10vw;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* --- Typography --- */
+
+        .slide h1 {
+            font-size: clamp(36px, 5vw, 60px);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+
+        .slide h1 .hl {
+            background: linear-gradient(135deg, var(--accent), var(--teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide h2 {
+            font-size: clamp(28px, 3.5vw, 44px);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+            margin-bottom: 20px;
+        }
+
+        .slide h3 {
+            font-size: clamp(14px, 1.5vw, 18px);
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .slide p, .slide li {
+            font-size: clamp(16px, 1.8vw, 22px);
+            color: var(--text-dim);
+            line-height: 1.65;
+        }
+
+        .slide p {
+            max-width: 720px;
+            margin-bottom: 16px;
+        }
+
+        .slide ul {
+            list-style: none;
+            margin-bottom: 16px;
+        }
+
+        .slide li {
+            padding: 6px 0 6px 28px;
+            position: relative;
+        }
+
+        .slide li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 16px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border);
+        }
+
+        .slide strong {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .slide code {
+            font-family: var(--mono);
+            font-size: 0.85em;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: var(--accent);
+        }
+
+        .slide .label {
+            font-size: clamp(11px, 1.2vw, 13px);
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .slide .subtitle {
+            font-size: clamp(18px, 2vw, 24px);
+            color: var(--text-dim);
+            max-width: 560px;
+            line-height: 1.5;
+        }
+
+        /* --- Layout helpers --- */
+
+        .columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 12px;
+        }
+
+        .columns-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 28px;
+            margin-top: 12px;
+        }
+
+        .col-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .col-card h3 {
+            margin-bottom: 8px;
+        }
+
+        .col-card p, .col-card li {
+            font-size: clamp(14px, 1.4vw, 17px);
+        }
+
+        /* --- Funnel diagram --- */
+
+        .funnel {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 24px 0;
+            flex-wrap: wrap;
+        }
+
+        .funnel-step {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 24px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            min-width: 120px;
+        }
+
+        .funnel-step .num {
+            font-family: var(--mono);
+            font-size: clamp(20px, 2.5vw, 32px);
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .funnel-step .lbl {
+            font-size: clamp(11px, 1.1vw, 13px);
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 4px;
+        }
+
+        .funnel-arrow {
+            font-size: 24px;
+            color: var(--border);
+        }
+
+        .funnel-step.highlight {
+            border-color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        .funnel-step.highlight .num {
+            color: var(--accent);
+        }
+
+        /* --- Definition boxes --- */
+
+        .def-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 12px;
+        }
+
+        .def-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .def-box .term {
+            font-family: var(--mono);
+            font-size: clamp(14px, 1.4vw, 17px);
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+
+        .def-box p {
+            font-size: clamp(13px, 1.3vw, 16px);
+            margin-bottom: 0;
+        }
+
+        /* --- Equation --- */
+
+        .equation {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-size: clamp(20px, 2.5vw, 32px);
+            color: var(--text);
+            margin: 24px 0;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .equation .op {
+            color: var(--accent);
+            font-style: normal;
+            font-weight: 700;
+            padding: 0 4px;
+        }
+
+        .equation .hl {
+            color: var(--teal);
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        /* --- Phase timeline --- */
+
+        .phase-row {
+            display: grid;
+            grid-template-columns: 48px 1fr auto;
+            gap: 16px;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .phase-row:last-child { border-bottom: none; }
+
+        .phase-num {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .pn-1 { background: var(--accent-light); color: var(--accent); }
+        .pn-2 { background: var(--teal-light); color: var(--teal); }
+        .pn-3 { background: var(--orange-light); color: var(--orange); }
+        .pn-4 { background: rgba(59,130,246,0.08); color: var(--blue); }
+
+        .phase-row .name {
+            font-size: clamp(16px, 1.6vw, 20px);
+            font-weight: 700;
+        }
+
+        .phase-row .desc {
+            font-size: clamp(13px, 1.3vw, 16px);
+            color: var(--text-dim);
+        }
+
+        .phase-row .time {
+            font-family: var(--mono);
+            font-size: clamp(12px, 1.2vw, 14px);
+            color: var(--text-dim);
+        }
+
+        /* --- Warning/note box --- */
+
+        .note-box {
+            background: var(--orange-light);
+            border: 1px solid #fcd34d;
+            border-radius: 10px;
+            padding: 20px 24px;
+            margin-top: 16px;
+        }
+
+        .note-box p {
+            color: var(--orange);
+            font-size: clamp(14px, 1.4vw, 18px);
+        }
+
+        .note-box strong {
+            color: var(--orange);
+        }
+
+        .accent-box {
+            background: var(--accent-light);
+            border: 1px solid #c7d2fe;
+            border-radius: 10px;
+            padding: 20px 24px;
+            margin-top: 16px;
+        }
+
+        .accent-box p {
+            color: var(--accent);
+            font-size: clamp(14px, 1.4vw, 18px);
+        }
+
+        /* --- Navigation --- */
+
+        .slide-nav {
+            position: fixed;
+            bottom: 24px;
+            right: 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 10;
+        }
+
+        .slide-counter {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        .nav-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.15s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        .nav-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--teal));
+            transition: width 0.3s ease;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<div class="deck" id="deck">
+
+    <!-- 1: Title -->
+    <div class="slide active">
+        <div class="label">Hands-On Workshop</div>
+        <h1>Project <span class="hl">MayDay</span></h1>
+        <p class="subtitle">
+            An afternoon of data science, machine learning, and real-time experimentation.
+        </p>
+    </div>
+
+    <!-- 2: Team formation -->
+    <div class="slide">
+        <div class="label">First Things First</div>
+        <h2>Form your teams</h2>
+        <p>
+            Teams of <strong>2–4</strong>. Try to cover these skills across your team:
+        </p>
+        <div class="columns-3" style="margin-top: 20px;">
+            <div class="col-card">
+                <h3>SQL &amp; data wrangling</h3>
+                <p>Someone comfortable writing JOINs and GROUP BYs to explore the database.</p>
+                <p style="margin-top: 8px; color: var(--accent); font-size: clamp(12px, 1.2vw, 14px); font-weight: 600;">MY472</p>
+            </div>
+            <div class="col-card">
+                <h3>Machine learning</h3>
+                <p>Someone who can train a model, choose features, and evaluate predictions.</p>
+                <p style="margin-top: 8px; color: var(--teal); font-size: clamp(12px, 1.2vw, 14px); font-weight: 600;">MY474</p>
+            </div>
+            <div class="col-card">
+                <h3>Experimentation</h3>
+                <p>Someone who can reason about what an A/B test is measuring and why the metric matters.</p>
+                <p style="margin-top: 8px; color: var(--orange); font-size: clamp(12px, 1.2vw, 14px); font-weight: 600;">MY457</p>
+            </div>
+        </div>
+        <div class="accent-box" style="max-width: 600px;">
+            <p>You don't need all three — but the teams that combine these perspectives tend to do best.</p>
+        </div>
+    </div>
+
+    <!-- 3: Scenario -->
+    <div class="slide">
+        <div class="label">The Scenario</div>
+        <h2>You run ad targeting for an e-commerce company</h2>
+        <p>
+            You have a database of <strong>500,000 ad impressions</strong> across
+            <strong>10,000 users</strong> and <strong>200 ad creatives</strong>.
+        </p>
+        <p>
+            Your job: decide <strong>which ads to show to which users</strong>
+            to generate the most revenue.
+        </p>
+    </div>
+
+    <!-- 3: The data -->
+    <div class="slide">
+        <div class="label">The Data</div>
+        <h2>Four tables, one funnel</h2>
+        <div class="def-grid">
+            <div class="def-box">
+                <div class="term">users</div>
+                <p>10,000 users with demographics, device type, loyalty tier, purchase history, browsing frequency</p>
+            </div>
+            <div class="def-box">
+                <div class="term">ads</div>
+                <p>200 ad creatives with category, price, discount, creative quality, headline style</p>
+            </div>
+            <div class="def-box">
+                <div class="term">impressions</div>
+                <p>500,000 times an ad was shown to a user — with page type, position, time of day, and whether they clicked</p>
+            </div>
+            <div class="def-box">
+                <div class="term">conversions</div>
+                <p>Purchases that followed a click — the revenue generated from each sale</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4: Key terms 1 -->
+    <div class="slide">
+        <div class="label">Key Terms</div>
+        <h2>The ad funnel</h2>
+        <div class="funnel">
+            <div class="funnel-step">
+                <div class="num">500K</div>
+                <div class="lbl">Impressions</div>
+            </div>
+            <div class="funnel-arrow">&rarr;</div>
+            <div class="funnel-step">
+                <div class="num">~148K</div>
+                <div class="lbl">Clicks</div>
+            </div>
+            <div class="funnel-arrow">&rarr;</div>
+            <div class="funnel-step">
+                <div class="num">~15K</div>
+                <div class="lbl">Conversions</div>
+            </div>
+            <div class="funnel-arrow">&rarr;</div>
+            <div class="funnel-step highlight">
+                <div class="num">$1.3M</div>
+                <div class="lbl">Revenue</div>
+            </div>
+        </div>
+        <p>
+            Each step narrows. Not every impression leads to a click.
+            Not every click leads to a purchase. Your model navigates this funnel.
+        </p>
+    </div>
+
+    <!-- 5: Key terms 2 -->
+    <div class="slide">
+        <div class="label">Key Terms</div>
+        <h2>Metrics you'll see</h2>
+        <div class="def-grid">
+            <div class="def-box">
+                <div class="term">CTR — Click-Through Rate</div>
+                <p>Fraction of impressions that get clicked. <code>clicks / impressions</code></p>
+            </div>
+            <div class="def-box">
+                <div class="term">CVR — Conversion Rate</div>
+                <p>Fraction of clicks that lead to a purchase. <code>conversions / clicks</code></p>
+            </div>
+            <div class="def-box">
+                <div class="term">Revenue per Impression</div>
+                <p>Average revenue generated each time an ad is shown. <strong>This is what you're scored on.</strong></p>
+            </div>
+            <div class="def-box">
+                <div class="term">Latency</div>
+                <p>How long your model takes to return a prediction. Measured in milliseconds.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6: What is an A/B test -->
+    <div class="slide">
+        <div class="label">Key Concept</div>
+        <h2>What is an A/B test?</h2>
+        <p>
+            A controlled experiment where different strategies are tested
+            on the <strong>same traffic</strong> at the <strong>same time</strong>.
+        </p>
+        <div class="columns" style="margin-top: 20px;">
+            <div class="col-card">
+                <h3>In our workshop</h3>
+                <ul>
+                    <li>Each team's model is a different strategy</li>
+                    <li>All teams see the same stream of users</li>
+                    <li>The simulation decides outcomes using the same rules</li>
+                    <li>We compare results on a shared dashboard</li>
+                </ul>
+            </div>
+            <div class="col-card">
+                <h3>In the real world</h3>
+                <ul>
+                    <li>Traffic is randomly split between variants</li>
+                    <li>Each variant runs simultaneously</li>
+                    <li>Statistical tests determine the winner</li>
+                    <li>Used everywhere: ads, product features, pricing</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7: The objective -->
+    <div class="slide">
+        <div class="label">Your Objective</div>
+        <h2>Maximise revenue per impression</h2>
+        <p>
+            Your model receives user features and a set of candidate ads.
+            It scores each ad. The highest-scoring ad gets shown.
+            Then we see what happens.
+        </p>
+        <div class="note-box">
+            <p>
+                <strong>Think carefully about what to optimise.</strong>
+                The metric you're scored on is revenue per impression — not
+                clicks, not accuracy, not AUC.
+            </p>
+        </div>
+    </div>
+
+    <!-- 8: The four phases -->
+    <div class="slide">
+        <div class="label">How It Works</div>
+        <h2>Four phases</h2>
+        <div style="margin-top: 8px;">
+            <div class="phase-row">
+                <div class="phase-num pn-1">1</div>
+                <div>
+                    <div class="name">Explore</div>
+                    <div class="desc">Query the database. Understand users, ads, and the funnel.</div>
+                </div>
+                <div class="time">~45m</div>
+            </div>
+            <div class="phase-row">
+                <div class="phase-num pn-2">2</div>
+                <div>
+                    <div class="name">Build</div>
+                    <div class="desc">Pull training data. Engineer features. Train your model.</div>
+                </div>
+                <div class="time">~75m</div>
+            </div>
+            <div class="phase-row">
+                <div class="phase-num pn-3">3</div>
+                <div>
+                    <div class="name">Optimise</div>
+                    <div class="desc">Profile latency. Make it fast enough for real-time scoring.</div>
+                </div>
+                <div class="time">~30m</div>
+            </div>
+            <div class="phase-row">
+                <div class="phase-num pn-4">4</div>
+                <div>
+                    <div class="name">Test live</div>
+                    <div class="desc">Upload your model. Watch the dashboard. Iterate.</div>
+                </div>
+                <div class="time">~45m</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 9: How the simulation works -->
+    <div class="slide">
+        <div class="label">Under the Hood</div>
+        <h2>How the simulation works</h2>
+        <ul>
+            <li>A stream of <strong>simulated users</strong> arrive continuously</li>
+            <li>For each user, the server picks <strong>10 candidate ads</strong></li>
+            <li>Your model <strong>scores all 10</strong> — the highest-scored ad is shown</li>
+            <li>A ground-truth model determines if the user <strong>clicks</strong> and <strong>buys</strong></li>
+            <li>Revenue is tracked per team on the <strong>live dashboard</strong></li>
+        </ul>
+    </div>
+
+    <!-- 10: Latency matters -->
+    <div class="slide">
+        <div class="label">Constraint</div>
+        <h2>Latency matters</h2>
+        <p>
+            The simulation has a <strong>latency budget</strong>. If your model is too slow
+            to score a batch, there's a chance that request gets assigned a <strong>random ad</strong>
+            instead of your model's choice.
+        </p>
+        <div class="columns" style="margin-top: 16px;">
+            <div class="col-card">
+                <h3>Fast model</h3>
+                <p>Every impression uses your model's prediction. No wasted traffic.</p>
+            </div>
+            <div class="col-card">
+                <h3>Slow model</h3>
+                <p>Some impressions fall back to random ads. Revenue you could have earned is lost.</p>
+            </div>
+        </div>
+        <div class="accent-box">
+            <p>This is a real production constraint. Ad systems typically require predictions in <strong>10–50ms</strong>.</p>
+        </div>
+    </div>
+
+    <!-- 11: Your tools -->
+    <div class="slide">
+        <div class="label">Getting Started</div>
+        <h2>Your tools</h2>
+        <div class="columns-3">
+            <div class="col-card">
+                <h3>SQL Explorer</h3>
+                <p>Web-based query interface. Run SQL against the database from your browser.</p>
+                <p style="margin-top: 8px;"><code>/sql</code></p>
+            </div>
+            <div class="col-card">
+                <h3>Student Notebook</h3>
+                <p>Guided Jupyter notebook. Pull data, train models, upload them.</p>
+                <p style="margin-top: 8px;"><code>student_workbook.ipynb</code></p>
+            </div>
+            <div class="col-card">
+                <h3>Live Dashboard</h3>
+                <p>Real-time leaderboard and charts. See how every team is doing.</p>
+                <p style="margin-top: 8px;"><code>/dashboard</code></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 12: Let's go -->
+    <div class="slide">
+        <h1>Let's go.</h1>
+        <p class="subtitle" style="max-width: 480px;">
+            Open the student notebook, register your team, and start exploring.
+        </p>
+        <div class="accent-box" style="max-width: 480px;">
+            <p>Hint pages are available on the server landing page if you get stuck.</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="slide-nav">
+    <span class="slide-counter" id="counter">1 / 13</span>
+    <button class="nav-btn" onclick="prev()" title="Previous (←)">&#8592;</button>
+    <button class="nav-btn" onclick="next()" title="Next (→)">&#8594;</button>
+</div>
+
+<script>
+    const slides = document.querySelectorAll('.slide');
+    const counter = document.getElementById('counter');
+    const progress = document.getElementById('progress');
+    let current = 0;
+
+    function show(n) {
+        slides[current].classList.remove('active');
+        current = Math.max(0, Math.min(n, slides.length - 1));
+        slides[current].classList.add('active');
+        counter.textContent = `${current + 1} / ${slides.length}`;
+        progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+    }
+
+    function next() { show(current + 1); }
+    function prev() { show(current - 1); }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+        if (e.key === 'Home') { e.preventDefault(); show(0); }
+        if (e.key === 'End') { e.preventDefault(); show(slides.length - 1); }
+    });
+
+    // Touch support
+    let touchStartX = 0;
+    document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+    document.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 50) { dx < 0 ? next() : prev(); }
+    });
+
+    show(0);
+</script>
+
+</body>
+</html>

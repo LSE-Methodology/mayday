@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 3: Optimise | Project MayDay</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/hints/hints.css">
+</head>
+<body>
+    <nav>
+        <a href="/" class="brand">Project MayDay</a>
+        <a href="/sql">SQL Explorer</a>
+        <a href="/dashboard">Live Dashboard</a>
+    </nav>
+
+    <div class="container hints-page">
+
+        <a href="/" class="back-link">&larr; Back</a>
+
+        <div class="hints-header">
+            <div class="phase-badge phase-3">Phase 3</div>
+            <h1>Optimise for Production</h1>
+            <p class="hints-sub">~30 minutes &mdash; A model that's too slow is a model that doesn't get used.</p>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">1</div>
+            <div>
+                <h3>Understand the penalty</h3>
+                <p>
+                    The simulation has a latency budget (shown on the dashboard settings).
+                    If your model takes longer than the budget to score a batch, there's a
+                    probability that request gets a random ad instead of your model's pick.
+                    The slower you are, the more traffic you waste.
+                </p>
+                <div class="hint-nudge">
+                    Check the "Timeouts" column on the leaderboard. If it's not zero,
+                    you're leaving revenue on the table.
+                </div>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">2</div>
+            <div>
+                <h3>Benchmark before you upload</h3>
+                <p>
+                    Use the <code>benchmark_latency()</code> function in the notebook. It
+                    measures inference time on a batch of 10 rows (the same batch size the
+                    simulation uses). Look at the P95, not just the median &mdash; one slow
+                    call in twenty still hurts.
+                </p>
+                <div class="hint-nudge">
+                    Logistic regression is typically under 1ms. A 200-tree LightGBM model
+                    is usually under 5ms. Where does yours sit?
+                </div>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">3</div>
+            <div>
+                <h3>Ways to speed things up</h3>
+                <p>
+                    If your model is too slow, you have options:
+                </p>
+                <ul class="hint-questions">
+                    <li>Fewer trees or a shallower max depth</li>
+                    <li>Drop low-importance features (check <code>feature_importances_</code>)</li>
+                    <li>Use a simpler model for part of the pipeline</li>
+                    <li>A fast model that predicts roughly the right thing beats a slow model that predicts precisely the right thing</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">4</div>
+            <div>
+                <h3>This is a real tradeoff</h3>
+                <p>
+                    In production ad systems, models have strict latency SLAs &mdash; typically
+                    10&ndash;50ms. Teams routinely sacrifice a few percentage points of accuracy
+                    to stay within budget. There's no right answer; it depends on how much
+                    accuracy you lose vs how much traffic you save.
+                </p>
+                <div class="hint-nudge">
+                    If your model is well within budget, don't optimise further. Spend the
+                    time improving your target or features instead.
+                </div>
+            </div>
+        </div>
+
+        <div class="hints-nav">
+            <a href="/hints/build" class="hints-nav-link">&larr; Phase 2: Build</a>
+            <a href="/hints/deploy" class="hints-nav-link">Phase 4: Deploy &rarr;</a>
+        </div>
+
+    </div>
+</body>
+</html>

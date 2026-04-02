@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 2: Build | Project MayDay</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/hints/hints.css">
+</head>
+<body>
+    <nav>
+        <a href="/" class="brand">Project MayDay</a>
+        <a href="/sql">SQL Explorer</a>
+        <a href="/dashboard">Live Dashboard</a>
+    </nav>
+
+    <div class="container hints-page">
+
+        <a href="/" class="back-link">&larr; Back</a>
+
+        <div class="hints-header">
+            <div class="phase-badge phase-2">Phase 2</div>
+            <h1>Build Your Model</h1>
+            <p class="hints-sub">~75 minutes &mdash; The model matters, but the target matters more.</p>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">1</div>
+            <div>
+                <h3>Choose your target carefully</h3>
+                <p>
+                    You'll be scored on <strong>revenue per impression</strong>. That's not the same
+                    as click-through rate. Think about what target variable best aligns
+                    with the metric you're actually being measured on.
+                </p>
+                <div class="hint-nudge">
+                    You can predict clicks, conversions, revenue, or some combination.
+                    What are the tradeoffs of each?
+                </div>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">2</div>
+            <div>
+                <h3>You're allowed to use more than one model</h3>
+                <p>
+                    Nothing says your final scoring function has to be a single model. You
+                    could train separate models for different parts of the problem and
+                    combine their predictions. Think about what a user's journey looks
+                    like: impression &rarr; click &rarr; purchase &rarr; revenue.
+                </p>
+                <div class="hint-nudge">
+                    Each step in that chain can be modelled. The question is how to
+                    combine them into a single score.
+                </div>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">3</div>
+            <div>
+                <h3>Don't forget the ad side</h3>
+                <p>
+                    Your model receives both user features and ad features. Two impressions
+                    to the same user can have very different values depending on which ad
+                    is shown. Make sure your model uses the ad metadata &mdash; price, discount,
+                    creative quality, etc.
+                </p>
+                <div class="hint-nudge">
+                    Think about it: even if you perfectly predict who will click, you still
+                    need to know what they're clicking <em>on</em> to estimate revenue.
+                </div>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">4</div>
+            <div>
+                <h3>Start simple, then iterate</h3>
+                <p>
+                    A logistic regression that predicts the right thing will beat a
+                    gradient-boosted forest that predicts the wrong thing. Get a baseline
+                    working end-to-end first (train, wrap, upload), then improve.
+                </p>
+                <div class="hint-nudge">
+                    You can re-upload your model at any time during Phase 4. Don't spend
+                    all your time here perfecting one approach.
+                </div>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">5</div>
+            <div>
+                <h3>Evaluate on the right metric</h3>
+                <p>
+                    AUC tells you about ranking quality, but it doesn't directly tell you
+                    about revenue. Try this: sort your test set by model score, look at the
+                    top 10% vs the bottom 90%. How much more revenue per impression does
+                    the top bucket generate?
+                </p>
+                <div class="hint-nudge">
+                    If your model's top-scored impressions don't have higher revenue,
+                    something about your target or features needs rethinking.
+                </div>
+            </div>
+        </div>
+
+        <div class="hints-nav">
+            <a href="/hints/explore" class="hints-nav-link">&larr; Phase 1: Explore</a>
+            <a href="/hints/optimise" class="hints-nav-link">Phase 3: Optimise &rarr;</a>
+        </div>
+
+    </div>
+</body>
+</html>

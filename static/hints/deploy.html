@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 4: Deploy | Project MayDay</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/hints/hints.css">
+</head>
+<body>
+    <nav>
+        <a href="/" class="brand">Project MayDay</a>
+        <a href="/sql">SQL Explorer</a>
+        <a href="/dashboard">Live Dashboard</a>
+    </nav>
+
+    <div class="container hints-page">
+
+        <a href="/" class="back-link">&larr; Back</a>
+
+        <div class="hints-header">
+            <div class="phase-badge phase-4">Phase 4</div>
+            <h1>Deploy &amp; Test Live</h1>
+            <p class="hints-sub">~45 minutes &mdash; Ship it, watch it, improve it.</p>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">1</div>
+            <div>
+                <h3>Upload and check</h3>
+                <p>
+                    After uploading, the server validates your model on a sample input and
+                    reports back the predicted score and latency. If the upload fails, the
+                    error message will tell you what went wrong &mdash; usually a feature name
+                    mismatch or a missing <code>.predict()</code> method.
+                </p>
+                <div class="hint-nudge">
+                    Remember to use <code>cloudpickle.dump()</code> when saving your model,
+                    not <code>pickle.dump()</code>.
+                </div>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">2</div>
+            <div>
+                <h3>Read the dashboard</h3>
+                <p>
+                    The leaderboard shows several metrics per team. The ranking is by
+                    <strong>revenue per impression</strong>, but the other columns are useful
+                    for diagnosing what's happening:
+                </p>
+                <ul class="hint-questions">
+                    <li><strong>CTR</strong> &mdash; are your chosen ads getting clicked?</li>
+                    <li><strong>CVR|Click</strong> &mdash; when they click, do they buy?</li>
+                    <li><strong>Revenue</strong> &mdash; total revenue so far</li>
+                    <li><strong>Avg Latency</strong> &mdash; how fast is your model?</li>
+                    <li><strong>Timeouts</strong> &mdash; how often did latency cause a penalty?</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">3</div>
+            <div>
+                <h3>Diagnose and iterate</h3>
+                <p>
+                    If your revenue per impression is low, look at the pattern:
+                </p>
+                <ul class="hint-questions">
+                    <li><strong>High CTR, low CVR</strong> &mdash; your model is good at predicting clicks
+                        but those clicks aren't converting. Rethink your target.</li>
+                    <li><strong>Low CTR, high CVR</strong> &mdash; you're finding the right users but not
+                        matching them with the right ads. Check your ad features.</li>
+                    <li><strong>Many timeouts</strong> &mdash; your model is too slow.
+                        Go back to Phase 3.</li>
+                </ul>
+                <div class="hint-nudge">
+                    You can re-upload at any time. Your metrics reset with each new model.
+                </div>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">4</div>
+            <div>
+                <h3>Watch the charts</h3>
+                <p>
+                    The revenue-over-time chart shows cumulative revenue. A steeper line
+                    means more revenue per unit of traffic. The revenue-per-impression
+                    chart shows the running average &mdash; it stabilises over time as noise
+                    averages out. Early fluctuations are normal.
+                </p>
+            </div>
+        </div>
+
+        <div class="hint-card">
+            <div class="hint-num">5</div>
+            <div>
+                <h3>Reflect</h3>
+                <p>
+                    After the simulation ends, think about these questions for the
+                    discussion:
+                </p>
+                <ul class="hint-questions">
+                    <li>Why did the winning team's approach work?</li>
+                    <li>Did any team have high CTR but low revenue? Why might that happen?</li>
+                    <li>If you ran this again, what would you do differently?</li>
+                    <li>How does this relate to real-world A/B testing and causal inference?</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="hints-nav">
+            <a href="/hints/optimise" class="hints-nav-link">&larr; Phase 3: Optimise</a>
+            <div></div>
+        </div>
+
+    </div>
+</body>
+</html>

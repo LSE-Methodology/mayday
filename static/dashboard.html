@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Dashboard | Project MayDay</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <nav>
+        <a href="/" class="brand">Project MayDay</a>
+        <a href="/sql">SQL Explorer</a>
+        <a href="/dashboard" class="active">Live Dashboard</a>
+    </nav>
+
+    <div class="container-wide">
+        <!-- Status bar -->
+        <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+                <h1 style="font-size: 1.4rem;">Live A/B Test</h1>
+                <span id="status-badge">
+                    <span class="status-dot status-stopped"></span>
+                    <span class="text-dim text-sm">Stopped</span>
+                </span>
+            </div>
+            <div class="flex gap-1">
+                <button class="btn btn-success" id="start-btn" onclick="startSimulation()">Start Simulation</button>
+                <button class="btn btn-danger" id="stop-btn" onclick="stopSimulation()" disabled>Stop</button>
+            </div>
+        </div>
+
+        <!-- Top metrics -->
+        <div class="grid-4 mb-2" id="top-metrics">
+            <div class="metric-card">
+                <div class="metric-value" id="metric-teams">0</div>
+                <div class="metric-label">Teams</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="metric-requests">0</div>
+                <div class="metric-label">Total Requests</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value text-green" id="metric-leader">--</div>
+                <div class="metric-label">Current Leader</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="metric-best-rpi">$0.0000</div>
+                <div class="metric-label">Best Rev/Impression</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid-2 mb-2">
+            <div class="card">
+                <h2>Revenue Over Time</h2>
+                <div class="chart-container">
+                    <canvas id="revenue-chart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Revenue Per Impression (Running)</h2>
+                <div class="chart-container">
+                    <canvas id="rpi-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="card">
+            <h2>Leaderboard</h2>
+            <div style="overflow-x: auto;">
+                <table class="leaderboard-table" id="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Rank</th>
+                            <th style="text-align: left;">Team</th>
+                            <th>Model</th>
+                            <th>Impressions</th>
+                            <th>Clicks</th>
+                            <th>CTR</th>
+                            <th>Conversions</th>
+                            <th>CVR|Click</th>
+                            <th>Revenue</th>
+                            <th>Rev/Impression</th>
+                            <th>Avg Latency</th>
+                            <th>Timeouts</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <tr><td colspan="12" class="text-dim" style="text-align:center; padding: 2rem;">
+                            No teams registered yet. Teams can register from the student notebook.
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Simulation config -->
+        <div class="card">
+            <h2>Simulation Settings (Instructor)</h2>
+            <div class="flex gap-2 items-center">
+                <label class="text-dim text-sm">
+                    Requests/sec:
+                    <input type="number" id="rps-input" value="20" min="1" max="200"
+                        style="width: 60px; background: var(--bg); border: 1px solid var(--border);
+                               border-radius: 4px; color: var(--text); padding: 0.3rem 0.5rem;
+                               font-family: var(--mono); font-size: 0.85rem;">
+                </label>
+                <label class="text-dim text-sm">
+                    Latency budget (ms):
+                    <input type="number" id="latency-input" value="50" min="5" max="1000"
+                        style="width: 60px; background: var(--bg); border: 1px solid var(--border);
+                               border-radius: 4px; color: var(--text); padding: 0.3rem 0.5rem;
+                               font-family: var(--mono); font-size: 0.85rem;">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart colors
+        const COLORS = [
+            '#6c63ff', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4',
+            '#ec4899', '#8b5cf6', '#14b8a6', '#f97316', '#64748b',
+            '#a855f7', '#84cc16', '#e11d48', '#0ea5e9', '#facc15',
+            '#7c3aed', '#10b981', '#fb923c', '#dc2626', '#06b6d4',
+        ];
+
+        // Initialize charts
+        const revenueCtx = document.getElementById('revenue-chart').getContext('2d');
+        const rpiCtx = document.getElementById('rpi-chart').getContext('2d');
+
+        const revenueChart = new Chart(revenueCtx, {
+            type: 'line',
+            data: { datasets: [] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 300 },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        title: { display: true, text: 'Seconds', color: '#6b7085' },
+                        ticks: { color: '#6b7085' },
+                        grid: { color: '#e2e4ea' },
+                    },
+                    y: {
+                        title: { display: true, text: 'Cumulative Revenue ($)', color: '#6b7085' },
+                        ticks: { color: '#6b7085', callback: v => '$' + v.toFixed(0) },
+                        grid: { color: '#e2e4ea' },
+                    },
+                },
+                plugins: {
+                    legend: { labels: { color: '#1a1d28', usePointStyle: true } },
+                },
+            },
+        });
+
+        const rpiChart = new Chart(rpiCtx, {
+            type: 'line',
+            data: { datasets: [] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 300 },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        title: { display: true, text: 'Seconds', color: '#6b7085' },
+                        ticks: { color: '#6b7085' },
+                        grid: { color: '#e2e4ea' },
+                    },
+                    y: {
+                        title: { display: true, text: 'Revenue per Impression ($)', color: '#6b7085' },
+                        ticks: { color: '#6b7085', callback: v => '$' + v.toFixed(4) },
+                        grid: { color: '#e2e4ea' },
+                    },
+                },
+                plugins: {
+                    legend: { labels: { color: '#1a1d28', usePointStyle: true } },
+                },
+            },
+        });
+
+        let pollInterval = null;
+        let startTimeRef = null;
+
+        async function startSimulation() {
+            const rps = parseInt(document.getElementById('rps-input').value) || 20;
+            const latency = parseInt(document.getElementById('latency-input').value) || 50;
+
+            try {
+                const resp = await fetch(`/api/simulation/start?requests_per_second=${rps}&latency_budget_ms=${latency}`, {
+                    method: 'POST',
+                });
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    alert(err.detail || 'Failed to start');
+                    return;
+                }
+                startTimeRef = Date.now() / 1000;
+                document.getElementById('start-btn').disabled = true;
+                document.getElementById('stop-btn').disabled = false;
+                startPolling();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function stopSimulation() {
+            try {
+                await fetch('/api/simulation/stop', { method: 'POST' });
+                document.getElementById('start-btn').disabled = false;
+                document.getElementById('stop-btn').disabled = true;
+                stopPolling();
+                updateStatusBadge(false);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function startPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(fetchLeaderboard, 2000);
+            fetchLeaderboard();
+        }
+
+        function stopPolling() {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        }
+
+        function updateStatusBadge(running) {
+            const badge = document.getElementById('status-badge');
+            if (running) {
+                badge.innerHTML = '<span class="status-dot status-running"></span><span class="text-sm" style="color: var(--green);">Running</span>';
+            } else {
+                badge.innerHTML = '<span class="status-dot status-stopped"></span><span class="text-dim text-sm">Stopped</span>';
+            }
+        }
+
+        async function fetchLeaderboard() {
+            try {
+                const resp = await fetch('/api/leaderboard');
+                const data = await resp.json();
+                updateStatusBadge(data.running);
+
+                if (data.running) {
+                    document.getElementById('start-btn').disabled = true;
+                    document.getElementById('stop-btn').disabled = false;
+                }
+
+                const lb = data.leaderboard;
+
+                // Top metrics
+                const teamsWithModels = lb.filter(t => t.has_model).length;
+                document.getElementById('metric-teams').textContent = teamsWithModels;
+                document.getElementById('metric-requests').textContent = data.total_requests.toLocaleString();
+
+                if (lb.length > 0 && lb[0].impressions > 0) {
+                    document.getElementById('metric-leader').textContent = lb[0].team;
+                    document.getElementById('metric-best-rpi').textContent = '$' + lb[0].revenue_per_impression.toFixed(4);
+                }
+
+                // Leaderboard table
+                const body = document.getElementById('leaderboard-body');
+                if (lb.length === 0) {
+                    body.innerHTML = '<tr><td colspan="12" class="text-dim" style="text-align:center; padding: 2rem;">No teams registered yet.</td></tr>';
+                } else {
+                    body.innerHTML = lb.map((t, i) => {
+                        const rank = i + 1;
+                        const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-other';
+                        return `<tr>
+                            <td style="text-align:left"><span class="rank-badge ${rankClass}">${rank}</span></td>
+                            <td style="text-align:left; font-family: var(--sans); font-weight: 600;">${escHtml(t.team)}</td>
+                            <td>${t.model_type || '--'}</td>
+                            <td>${t.impressions.toLocaleString()}</td>
+                            <td>${t.clicks.toLocaleString()}</td>
+                            <td>${(t.ctr * 100).toFixed(2)}%</td>
+                            <td>${t.conversions.toLocaleString()}</td>
+                            <td>${(t.cvr * 100).toFixed(1)}%</td>
+                            <td>$${t.revenue.toFixed(2)}</td>
+                            <td><strong>$${t.revenue_per_impression.toFixed(4)}</strong></td>
+                            <td>${t.avg_latency_ms.toFixed(1)}ms</td>
+                            <td>${t.latency_violations > 0 ? '<span style="color:var(--orange)">' + t.latency_violations + '</span>' : '0'}</td>
+                        </tr>`;
+                    }).join('');
+                }
+
+                // Update charts
+                updateCharts(lb);
+
+            } catch (e) {
+                console.error('Poll error:', e);
+            }
+        }
+
+        function updateCharts(leaderboard) {
+            const teamNames = leaderboard.filter(t => t.history.length > 0).map(t => t.team);
+
+            // Revenue chart
+            revenueChart.data.datasets = teamNames.map((name, i) => {
+                const team = leaderboard.find(t => t.team === name);
+                const firstT = team.history.length > 0 ? team.history[0].t : 0;
+                return {
+                    label: name,
+                    data: team.history.map(h => ({ x: Math.round(h.t - firstT), y: h.revenue })),
+                    borderColor: COLORS[i % COLORS.length],
+                    backgroundColor: COLORS[i % COLORS.length] + '33',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.3,
+                    fill: false,
+                };
+            });
+            revenueChart.update('none');
+
+            // RPI chart
+            rpiChart.data.datasets = teamNames.map((name, i) => {
+                const team = leaderboard.find(t => t.team === name);
+                const firstT = team.history.length > 0 ? team.history[0].t : 0;
+                return {
+                    label: name,
+                    data: team.history.map(h => ({ x: Math.round(h.t - firstT), y: h.rpi })),
+                    borderColor: COLORS[i % COLORS.length],
+                    backgroundColor: COLORS[i % COLORS.length] + '33',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.3,
+                    fill: false,
+                };
+            });
+            rpiChart.update('none');
+        }
+
+        function escHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        // Start polling immediately (to show registered teams even before sim starts)
+        startPolling();
+    </script>
+</body>
+</html>

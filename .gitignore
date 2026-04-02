@@ -1,0 +1,8 @@
+data/workshop.db
+solutions/
+__pycache__/
+*.pyc
+.claude/
+.venv/
+*.pkl
+.DS_Store
