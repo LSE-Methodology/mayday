@@ -140,6 +140,22 @@
             color: var(--accent);
         }
 
+        .slide a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+
+        .slide a code {
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .slide a:hover code {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
         .slide .label {
             font-size: clamp(11px, 1.2vw, 13px);
             font-weight: 700;
@@ -688,17 +704,17 @@
             <div class="col-card">
                 <h3>SQL Explorer</h3>
                 <p>Web-based query interface. Run SQL against the database from your browser.</p>
-                <p style="margin-top: 8px;"><code>/sql</code></p>
+                <p style="margin-top: 8px;"><a href="/sql" target="_blank" rel="noopener"><code>/sql</code></a></p>
             </div>
             <div class="col-card">
                 <h3>Student Notebook</h3>
                 <p>Guided Jupyter notebook. Pull data, train models, upload them.</p>
-                <p style="margin-top: 8px;"><code>student_workbook.ipynb</code></p>
+                <p style="margin-top: 8px;"><a href="https://github.com/LSE-Methodology/mayday-live" target="_blank" rel="noopener"><code>github.com/LSE-Methodology/mayday-live</code></a></p>
             </div>
             <div class="col-card">
                 <h3>Live Dashboard</h3>
                 <p>Real-time leaderboard and charts. See how every team is doing.</p>
-                <p style="margin-top: 8px;"><code>/dashboard</code></p>
+                <p style="margin-top: 8px;"><a href="/dashboard" target="_blank" rel="noopener"><code>/dashboard</code></a></p>
             </div>
         </div>
     </div>
@@ -710,7 +726,7 @@
             Open the student notebook, register your team, and start exploring.
         </p>
         <div class="accent-box" style="max-width: 480px;">
-            <p>Hint pages are available on the server landing page if you get stuck.</p>
+            <p>Hint pages are available on the <a href="/" target="_blank" rel="noopener">server landing page</a> if you get stuck.</p>
         </div>
     </div>
 
