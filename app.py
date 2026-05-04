@@ -59,6 +59,14 @@ _SQL_CACHE_MAX_ENTRIES = 8
 _sql_cache: OrderedDict[tuple[str, int], dict[str, Any]] = OrderedDict()
 _sql_cache_lock = threading.Lock()
 
+# Per-key locks prevent thundering herd: 20 students hitting the same query
+# simultaneously would otherwise all see the cache miss before any of them
+# can populate, and each end up doing the full work. With this, only the
+# first request actually computes; the others block briefly on the same lock,
+# then read the result from the cache.
+_sql_pending: dict[tuple[str, int], threading.Lock] = {}
+_sql_pending_meta_lock = threading.Lock()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -143,6 +151,7 @@ def _run_sql_cached(query: str, limit: int) -> dict[str, Any]:
     SQLite is read-only and the data never changes during a workshop, so the
     same (query, limit) is guaranteed to return the same result. Multiple
     students hitting the same canonical pull get the cached response.
+    Per-key locks prevent thundering herd on the first miss.
     """
     key = (query, limit)
     with _sql_cache_lock:
@@ -151,14 +160,23 @@ def _run_sql_cached(query: str, limit: int) -> dict[str, Any]:
             _sql_cache.move_to_end(key)
             return cached
 
-    result = _run_sql_blocking(query, limit)
+    with _sql_pending_meta_lock:
+        key_lock = _sql_pending.setdefault(key, threading.Lock())
 
-    with _sql_cache_lock:
-        _sql_cache[key] = result
-        _sql_cache.move_to_end(key)
-        while len(_sql_cache) > _SQL_CACHE_MAX_ENTRIES:
-            _sql_cache.popitem(last=False)
-    return result
+    with key_lock:
+        with _sql_cache_lock:
+            cached = _sql_cache.get(key)
+            if cached is not None:
+                return cached
+
+        result = _run_sql_blocking(query, limit)
+
+        with _sql_cache_lock:
+            _sql_cache[key] = result
+            _sql_cache.move_to_end(key)
+            while len(_sql_cache) > _SQL_CACHE_MAX_ENTRIES:
+                _sql_cache.popitem(last=False)
+        return result
 
 
 def _run_sql_blocking(query: str, limit: int) -> dict[str, Any]:
