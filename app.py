@@ -43,10 +43,18 @@ STATIC_DIR = Path(__file__).parent / "static"
 teams: dict[str, dict[str, Any]] = {}
 simulator: ABTestSimulator | None = None
 
+# Bound how many SQL queries can hit SQLite in parallel. Each query runs in a
+# thread (asyncio.to_thread), so we get real concurrent disk reads (sqlite3
+# releases the GIL during I/O) without flooding the threadpool — leaves CPU
+# headroom for the simulation loop and other handlers.
+_SQL_CONCURRENCY = 4
+_sql_sem: asyncio.Semaphore | None = None
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global simulator
+    global simulator, _sql_sem
+    _sql_sem = asyncio.Semaphore(_SQL_CONCURRENCY)
     if not DB_PATH.exists():
         print("ERROR: Database not found. Run `python generate_data.py` first.")
     else:
@@ -112,23 +120,31 @@ async def execute_sql(body: SQLQuery):
         raise HTTPException(403, "Access denied to internal tables")
 
     try:
-        conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
-        conn.row_factory = sqlite3.Row
-
-        # Set a timeout/limit
-        cursor = conn.cursor()
-        cursor.execute(f"SELECT * FROM ({query}) LIMIT {body.limit}")
-        columns = [desc[0] for desc in cursor.description]
-        rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
-        conn.close()
-
-        return {"columns": columns, "rows": rows, "count": len(rows),
-                "truncated": len(rows) == body.limit}
-
+        async with _sql_sem:
+            return await asyncio.to_thread(_run_sql_blocking, query, body.limit)
     except sqlite3.OperationalError as e:
         raise HTTPException(400, f"SQL error: {e}")
     except Exception as e:
         raise HTTPException(500, f"Error: {e}")
+
+
+def _run_sql_blocking(query: str, limit: int) -> dict[str, Any]:
+    """Synchronous SQL execution — runs in a worker thread.
+
+    Rows are returned as a list of tuples (not dicts) — much smaller JSON
+    payload and faster to serialise. Both `pd.DataFrame(rows, columns=cols)`
+    and the SQL Explorer (sql.html) consume them positionally.
+    """
+    conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+    try:
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT * FROM ({query}) LIMIT {limit}")
+        columns = [desc[0] for desc in cursor.description]
+        rows = cursor.fetchall()
+    finally:
+        conn.close()
+    return {"columns": columns, "rows": rows, "count": len(rows),
+            "truncated": len(rows) == limit}
 
 
 @app.get("/api/schema")
@@ -229,6 +245,12 @@ async def upload_model(team_name: str, model: UploadFile = File(...)):
         preds = model_obj.predict(dummy)
         elapsed = (time.perf_counter() - start) * 1000
         pred_value = float(preds[0])
+        # NaN/inf would slip past `float()` and then break JSON serialisation,
+        # so flag them as a validation failure with a clear message.
+        if not np.isfinite(pred_value):
+            raise ValueError(
+                f"predict() returned a non-finite value ({pred_value!r}). "
+                "Check for NaN/inf in your training data or features.")
     except Exception as e:
         raise HTTPException(400, f"Model validation failed: {e}\n\n"
                            "Your model must accept a DataFrame with the feature columns "
@@ -325,5 +347,8 @@ async def leaderboard():
 
 
 if __name__ == "__main__":
+    import os
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # PaaS hosts (Render, Fly, Heroku, Railway) inject $PORT
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

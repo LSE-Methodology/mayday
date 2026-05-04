@@ -1,0 +1,15 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+.DS_Store
+.claude
+data/workshop.db
+solutions/
+notebooks/
+docs/
+*.md
+*.pkl
+stress_test.py
+/tmp

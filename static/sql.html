@@ -191,7 +191,7 @@ SELECT * FROM users LIMIT 10;</textarea>
             // Table body
             const body = document.getElementById('results-body');
             body.innerHTML = rows.map(row =>
-                '<tr>' + columns.map(c => `<td>${formatCell(row[c])}</td>`).join('') + '</tr>'
+                '<tr>' + row.map(v => `<td>${formatCell(v)}</td>`).join('') + '</tr>'
             ).join('');
 
             document.getElementById('results-scroll').style.display = 'block';

@@ -192,15 +192,20 @@ class ABTestSimulator:
 
         return clicked, converted, round(revenue, 2)
 
-    def _score_team(self, team_name: str, features: pd.DataFrame) -> tuple[np.ndarray | None, float, bool]:
-        """Score all candidate ads using a team's model. Returns (scores, latency_ms, had_error)."""
+    async def _score_team(self, team_name: str, features: pd.DataFrame) -> tuple[np.ndarray | None, float, bool]:
+        """Score all candidate ads using a team's model. Returns (scores, latency_ms, had_error).
+
+        model.predict() runs in a worker thread so a slow team doesn't block the
+        event loop (which would freeze /api/leaderboard for everyone watching
+        the dashboard).
+        """
         model = self.teams[team_name].get("model")
         if model is None:
             return None, 0.0, True
 
         start = time.perf_counter()
         try:
-            scores = model.predict(features)
+            scores = await asyncio.to_thread(model.predict, features)
             elapsed_ms = (time.perf_counter() - start) * 1000
             return np.array(scores, dtype=float), elapsed_ms, False
         except Exception:
@@ -276,23 +281,25 @@ class ABTestSimulator:
             user_id, candidate_ad_ids, page_type, position, hour, day, session_depth
         )
 
-        # Score for each team
-        for team_name, team in self.teams.items():
-            if team["model"] is None:
-                continue
+        # Score every team in parallel — each model.predict runs in its own
+        # thread, so one slow team doesn't serialise the rest. The metrics and
+        # outcome sampling below stay in the main coroutine because self.rng
+        # is not thread-safe.
+        active_teams = [(n, t) for n, t in self.teams.items() if t["model"] is not None]
+        score_results = await asyncio.gather(*[
+            self._score_team(name, features) for name, _ in active_teams
+        ])
 
-            scores, latency_ms, had_error = self._score_team(team_name, features)
+        for (team_name, team), (scores, latency_ms, had_error) in zip(active_teams, score_results):
             m = team["metrics"]
             m["impressions"] += 1
             m["total_latency_ms"] += latency_ms
 
             if had_error:
                 m["errors"] += 1
-                # Fallback: random ad
                 chosen_ad_id = int(self.rng.choice(candidate_ad_ids))
             elif latency_ms > self.latency_budget_ms:
                 m["latency_violations"] += 1
-                # Latency penalty: with probability proportional to overshoot, use random ad
                 penalty_prob = 1.0 - (self.latency_budget_ms / latency_ms)
                 if self.rng.random() < penalty_prob:
                     chosen_ad_id = int(self.rng.choice(candidate_ad_ids))
@@ -301,7 +308,6 @@ class ABTestSimulator:
             else:
                 chosen_ad_id = int(candidate_ad_ids[np.argmax(scores)])
 
-            # Simulate the outcome using the ground-truth DGP
             clicked, converted, revenue = self._simulate_outcome(
                 user_id, chosen_ad_id, page_type, position, hour, session_depth
             )
