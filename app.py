@@ -21,8 +21,10 @@ import cloudpickle
 import io
 import pickle
 import sqlite3
+import threading
 import time
 import traceback
+from collections import OrderedDict
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -49,6 +51,13 @@ simulator: ABTestSimulator | None = None
 # headroom for the simulation loop and other handlers.
 _SQL_CONCURRENCY = 4
 _sql_sem: asyncio.Semaphore | None = None
+
+# Cache results for repeated identical queries. Workshop students all run the
+# same canned training-pull from the notebook, so first student pays the cost
+# and the rest get a near-instant response. Capped to bound memory.
+_SQL_CACHE_MAX_ENTRIES = 8
+_sql_cache: OrderedDict[tuple[str, int], dict[str, Any]] = OrderedDict()
+_sql_cache_lock = threading.Lock()
 
 
 @asynccontextmanager
@@ -121,11 +130,35 @@ async def execute_sql(body: SQLQuery):
 
     try:
         async with _sql_sem:
-            return await asyncio.to_thread(_run_sql_blocking, query, body.limit)
+            return await asyncio.to_thread(_run_sql_cached, query, body.limit)
     except sqlite3.OperationalError as e:
         raise HTTPException(400, f"SQL error: {e}")
     except Exception as e:
         raise HTTPException(500, f"Error: {e}")
+
+
+def _run_sql_cached(query: str, limit: int) -> dict[str, Any]:
+    """Cached wrapper around _run_sql_blocking.
+
+    SQLite is read-only and the data never changes during a workshop, so the
+    same (query, limit) is guaranteed to return the same result. Multiple
+    students hitting the same canonical pull get the cached response.
+    """
+    key = (query, limit)
+    with _sql_cache_lock:
+        cached = _sql_cache.get(key)
+        if cached is not None:
+            _sql_cache.move_to_end(key)
+            return cached
+
+    result = _run_sql_blocking(query, limit)
+
+    with _sql_cache_lock:
+        _sql_cache[key] = result
+        _sql_cache.move_to_end(key)
+        while len(_sql_cache) > _SQL_CACHE_MAX_ENTRIES:
+            _sql_cache.popitem(last=False)
+    return result
 
 
 def _run_sql_blocking(query: str, limit: int) -> dict[str, Any]:

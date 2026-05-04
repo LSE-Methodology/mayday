@@ -1,12 +1,24 @@
 # Project MayDay — Instructor Setup Guide
 
+## Live workshop deployment
+
+The server is deployed at **https://lse-mayday.onrender.com** (Render Standard tier). Students point the notebook at this URL; you only need a local install if you want to test or modify the platform.
+
+**Critical: Python version must match across the deployment, your machine, and every student's machine.** The server runs Python 3.12 (pinned in `Dockerfile`). Pickled scikit-learn / LightGBM models cannot be loaded across Python minor versions — students on 3.11, 3.13, etc. will see cryptic "lasti is not an int" errors at upload. Tell them to create a 3.12 environment before the workshop:
+
+```bash
+conda create -n mayday python=3.12
+conda activate mayday
+pip install -r requirements.txt
+```
+
 ## Quick start (local test run)
 
 ```bash
 cd mayday
 
-# 1. Create a virtual environment
-python -m venv .venv
+# 1. Create a virtual environment (Python 3.12 to match the deployed server)
+python3.12 -m venv .venv
 source .venv/bin/activate
 
 # 2. Install dependencies
